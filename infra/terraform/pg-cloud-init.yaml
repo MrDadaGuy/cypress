@@ -1,0 +1,49 @@
+#cloud-config
+# Container-Optimized OS: runs Postgres 17 + pgvector from the Artifact Registry Docker Hub proxy.
+# Data lives on the boot disk's stateful partition, which survives reboots and COS updates.
+
+write_files:
+  - path: /var/lib/cypress/start-pg.sh
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      export HOME=/var/lib/cypress
+      DATA=/mnt/stateful_partition/pgdata
+      mkdir -p "$DATA"
+      docker-credential-gcr configure-docker --registries=${region}-docker.pkg.dev
+      MD=http://metadata.google.internal/computeMetadata/v1
+      TOKEN=$(curl -sf -H 'Metadata-Flavor: Google' "$MD/instance/service-accounts/default/token" \
+        | tr -d '\n' | sed -E 's/.*"access_token" *: *"([^"]+)".*/\1/')
+      PW=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+        "https://secretmanager.googleapis.com/v1/projects/${project}/secrets/db-password/versions/latest:access" \
+        | tr -d '\n' | sed -E 's/.*"data" *: *"([^"]+)".*/\1/' | base64 -d)
+      iptables -w -C INPUT -p tcp --dport 5432 -j ACCEPT 2>/dev/null || iptables -w -A INPUT -p tcp --dport 5432 -j ACCEPT
+      docker rm -f postgres >/dev/null 2>&1 || true
+      exec docker run --name postgres --rm -p 5432:5432 --shm-size=128m \
+        -v "$DATA":/var/lib/postgresql/data \
+        -e POSTGRES_USER=cypress -e POSTGRES_DB=cypress -e POSTGRES_PASSWORD="$PW" \
+        -e PGDATA=/var/lib/postgresql/data/pgdata \
+        ${image} \
+        -c shared_buffers=128MB -c effective_cache_size=384MB -c work_mem=4MB \
+        -c maintenance_work_mem=64MB -c max_connections=40 -c log_min_duration_statement=1000
+
+  - path: /etc/systemd/system/postgres.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Postgres 17 + pgvector
+      Wants=network-online.target
+      After=network-online.target docker.service
+      Requires=docker.service
+
+      [Service]
+      ExecStart=/bin/bash /var/lib/cypress/start-pg.sh
+      ExecStop=/usr/bin/docker stop -t 60 postgres
+      Restart=always
+      RestartSec=10
+      TimeoutStopSec=90
+
+runcmd:
+  - systemctl daemon-reload
+  - systemctl start postgres.service

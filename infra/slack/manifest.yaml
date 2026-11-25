@@ -1,0 +1,45 @@
+# Slack app manifest for Cypress. Create at https://api.slack.com/apps -> Create New App -> From a manifest.
+# Socket Mode is on so local dev needs no public URL. Switch to HTTPS request URLs when deployed to Cloud Run.
+display_information:
+  name: Cypress
+  description: Lake Hills park assistant - tickets, reminders, notices
+  background_color: "#0d5c63"
+features:
+  app_home:
+    home_tab_enabled: true
+    messages_tab_enabled: true
+    messages_tab_read_only_enabled: false
+  bot_user:
+    display_name: Cypress
+    always_online: true
+  slash_commands:
+    - command: /cypress
+      description: Ask Cypress, or see your open tickets
+      usage_hint: "[mine | overdue | question]"
+      should_escape: false
+oauth_config:
+  scopes:
+    bot:
+      - app_mentions:read     # @Cypress in channels
+      - groups:history        # read messages in private #cypress
+      - groups:read           # channel members (private), so answers match the audience
+      - channels:read         # channel members (public)
+      - chat:write            # post reminders, digests, approval cards
+      - im:history            # DMs with Cypress
+      - im:read
+      - im:write              # open DMs for per-person reminders
+      - users:read
+      - users:read.email      # map Slack users -> board roles by email
+      - files:read            # photos posted in Slack for reports
+      - commands
+settings:
+  event_subscriptions:
+    bot_events:
+      - app_mention
+      - message.groups
+      - message.im
+  interactivity:
+    is_enabled: true          # Acknowledge / Snooze / Done / Approve buttons
+  org_deploy_enabled: false
+  socket_mode_enabled: true
+  token_rotation_enabled: false

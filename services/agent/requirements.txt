@@ -1,0 +1,30 @@
+# API + ingest runtime
+fastapi==0.165.0
+uvicorn[standard]==0.54.0
+psycopg[binary,pool]==3.3.9
+pydantic==2.14.4
+firebase-admin==7.8.0
+google-auth==2.62.2
+google-genai==3.6.1
+httpx==0.28.1
+trafilatura==2.3.1
+pymupdf==2.1
+pymupdf4llm==2.1
+langgraph==1.2.23
+langgraph-checkpoint-postgres==3.2.1
+# Models + Slack (agent, coming next)
+anthropic[vertex]==2.10.0
+openai==3.55.1
+slack-bolt==1.30.0
+google-cloud-secret-manager==2.32.0
+shapely==2.2.0
+flashrank==0.2.10              # local reranker (onnxruntime, ~4 MB model baked into the image)
+python-multipart==0.0.33
+pillow==13.0.0
+google-cloud-storage==3.17.1
+# Tracing to Cloud Trace (cypress/tracing.py)
+opentelemetry-sdk==1.45.2
+opentelemetry-exporter-gcp-trace==1.15.0
+opentelemetry-instrumentation-fastapi==0.66b2
+opentelemetry-instrumentation-httpx==0.66b2
+openpyxl==3.1.5

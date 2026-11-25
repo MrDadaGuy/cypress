@@ -1,0 +1,7 @@
+.venv
+__pycache__
+tests
+legacy
+slack_stub.py
+*.pyc
+.uploads

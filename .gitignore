@@ -1,0 +1,24 @@
+# Secrets & credentials — never commit
+.env
+.env.*
+*.pem
+*service-account*.json
+.config/
+# Member PII — imported via admin console only, never committed
+*.csv
+data/private/
+**/membership*.json
+# Python
+__pycache__/
+*.pyc
+.venv*/
+# Rust
+target/
+# Node
+node_modules/
+dist/
+# Terraform
+.terraform/
+*.tfstate*
+# OS
+.DS_Store
